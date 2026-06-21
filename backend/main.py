@@ -6,7 +6,6 @@ import os
 
 from agents.voice_agent import generate_voice
 from agents.distribution_agent import publish_to_buzz, publish_to_spotify
-
 app = FastAPI(title="AI Podcast Studio")
 
 app.add_middleware(
@@ -14,8 +13,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-)
-
+) 
 # -----------------------
 # 🔑 GROQ CLIENT
 # -----------------------
