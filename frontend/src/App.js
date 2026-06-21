@@ -20,8 +20,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [darkMode, setDarkMode] = useState(true);
-
-  // ⭐ NEW: workflow step animation state
   const [step, setStep] = useState(0);
 
   const workflowSteps = [
@@ -64,15 +62,13 @@ export default function App() {
     { name: "Fri", episodes: 5 },
   ];
 
-  // ⭐ UPDATED: generate with workflow animation
   const handleGenerate = async () => {
-    if (!topic) return;
+    if (!topic.trim()) return;
 
     setLoading(true);
     setResult(null);
     setStep(0);
 
-    // fake pipeline animation (Zapier style)
     const interval = setInterval(() => {
       setStep((prev) => {
         if (prev >= workflowSteps.length - 1) {
@@ -84,7 +80,7 @@ export default function App() {
     }, 800);
 
     try {
-      const res = await (fetch("https://duairfan-ai-podcast-backend.hf.space/generate"), {
+      const res = await fetch("https://duairfan-ai-podcast-backend.hf.space/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,11 +88,15 @@ export default function App() {
         body: JSON.stringify({ topic }),
       });
 
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const data = await res.json();
       setResult(data.episode || data);
 
     } catch (error) {
-      setResult({ error: "Backend connection failed" });
+      setResult({ error: `Backend connection failed: ${error.message}` });
     }
 
     setTimeout(() => setLoading(false), 3500);
@@ -158,7 +158,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* ⭐ NEW AI WORKFLOW ANIMATION */}
+        {/* AI WORKFLOW ANIMATION */}
         {loading && (
           <div style={{ marginTop: 15 }}>
             <p style={{ color: theme.sub }}>⚡ AI Workflow Running...</p>
@@ -189,7 +189,15 @@ export default function App() {
           <div style={{ marginTop: 20 }}>
 
             {result.error ? (
-              <p style={{ color: "red" }}>{result.error}</p>
+              <div style={{ 
+                padding: 15, 
+                background: '#fee', 
+                borderRadius: 8, 
+                color: 'red',
+                border: '1px solid #fcc'
+              }}>
+                ❌ {result.error}
+              </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
@@ -202,36 +210,47 @@ export default function App() {
 
                 <div style={{ padding: 12, borderRadius: 10, border: `1px solid ${theme.border}` }}>
                   <b style={{ color: theme.sub }}>📚 Research</b>
-                  <p style={{ color: theme.text }}>{result.research}</p>
+                  <p style={{ color: theme.text, whiteSpace: 'pre-wrap' }}>{result.research}</p>
                 </div>
 
                 <div style={{ padding: 12, borderRadius: 10, border: `1px solid ${theme.border}` }}>
                   <b style={{ color: theme.sub }}>📝 Script</b>
-                  <p style={{ color: theme.text }}>{result.script}</p>
+                  <p style={{ color: theme.text, whiteSpace: 'pre-wrap' }}>{result.script}</p>
                 </div>
 
                 <div style={{ padding: 12, borderRadius: 10, border: `1px solid ${theme.border}` }}>
                   <b style={{ color: theme.sub }}>🎧 Audio</b>
-                  <audio controls style={{ width: "100%", marginTop: 10 }}>
-                    <source src={result.audio} type="audio/mpeg" />
-                  </audio>
+                  {result.audio?.audio_url ? (
+                    <audio controls style={{ width: "100%", marginTop: 10 }}>
+                      <source src={result.audio.audio_url} type="audio/mpeg" />
+                    </audio>
+                  ) : (
+                    <p style={{ color: theme.sub }}>Audio generation pending...</p>
+                  )}
                 </div>
 
                 {result.buzz && (
-                  <div style={{ color: "#22c55e", fontWeight: "bold" }}>
-                    📢 {result.buzz.message}
+                  <div style={{ 
+                    padding: 10, 
+                    background: '#064e3b', 
+                    borderRadius: 8,
+                    color: "#22c55e", 
+                    fontWeight: "bold" 
+                  }}>
+                    📢 {result.buzz.message || 'Published to Buzzsprout'}
                   </div>
                 )}
 
                 {result.spotify && (
-                  <a
-                    href={result.spotify.spotify_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: "#38bdf8", fontWeight: "bold" }}
-                  >
-                    🎵 Open Spotify Episode
-                  </a>
+                  <div style={{ 
+                    padding: 10, 
+                    background: '#1e3a5f', 
+                    borderRadius: 8,
+                    color: "#38bdf8", 
+                    fontWeight: "bold" 
+                  }}>
+                    🎵 {result.spotify.message || 'Published to Spotify'}
+                  </div>
                 )}
 
               </div>
