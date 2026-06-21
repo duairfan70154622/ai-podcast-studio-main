@@ -21,6 +21,7 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [darkMode, setDarkMode] = useState(true);
   const [step, setStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const workflowSteps = [
     "Researching AI...",
@@ -61,6 +62,23 @@ export default function App() {
     { name: "Thu", episodes: 6 },
     { name: "Fri", episodes: 5 },
   ];
+
+  // 🎙️ Play Audio Function
+  const playAudio = (text) => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // ⏹️ Stop Audio Function
+  const stopAudio = () => {
+    window.speechSynthesis.cancel();
+    setIsPlaying(false);
+  };
 
   const handleGenerate = async () => {
     if (!topic.trim()) return;
@@ -218,15 +236,65 @@ export default function App() {
                   <p style={{ color: theme.text, whiteSpace: 'pre-wrap' }}>{result.script}</p>
                 </div>
 
-                <div style={{ padding: 12, borderRadius: 10, border: `1px solid ${theme.border}` }}>
-                  <b style={{ color: theme.sub }}>🎧 Audio</b>
-                  {result.audio?.audio_url ? (
-                    <audio controls style={{ width: "100%", marginTop: 10 }}>
-                      <source src={result.audio.audio_url} type="audio/mpeg" />
-                    </audio>
+                {/* 🎙️ AUDIO PLAYER - SIMPLE BROWSER TTS */}
+                <div style={{ 
+                  padding: 15, 
+                  borderRadius: 10, 
+                  border: `2px solid ${theme.accent}`,
+                  background: darkMode ? '#0f1a2e' : '#f0f4ff'
+                }}>
+                  <b style={{ color: theme.sub }}>🎧 Audio Player</b>
+                  
+                  {result.script ? (
+                    <div style={{ marginTop: 10, display: 'flex', gap: 10 }}>
+                      <button 
+                        onClick={() => playAudio(result.script)}
+                        disabled={isPlaying}
+                        style={{
+                          padding: '12px 24px',
+                          background: isPlaying ? '#4ade80' : theme.accent,
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          cursor: isPlaying ? 'default' : 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        {isPlaying ? '🔊 Playing...' : '▶️ Play Podcast'}
+                      </button>
+                      
+                      <button 
+                        onClick={stopAudio}
+                        style={{
+                          padding: '12px 24px',
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        ⏹️ Stop
+                      </button>
+                    </div>
                   ) : (
-                    <p style={{ color: theme.sub }}>Audio generation pending...</p>
+                    <p style={{ color: theme.sub, marginTop: 10 }}>
+                      Generate script to enable audio playback
+                    </p>
                   )}
+                  
+                  <p style={{ color: theme.sub, fontSize: 11, marginTop: 10 }}>
+                    🎙️ Powered by Browser Text-to-Speech
+                  </p>
                 </div>
 
                 {result.buzz && (
